@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>LAW VOCABULARY</title>
+  <style>
+    /* Importamos las fuentes */
+    @import url('https://fonts.googleapis.com/css2?family=Revalia&display=swap'); /* parecida a Reverie */
+    @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@900&display=swap'); /* Arial Black alternativa */
+    @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap'); /* parecida a Dastin */
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Raleway', sans-serif;
+      background: url("fondo.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Revalia', cursive;
+      font-size: 3em;
+      margin-top: 20px;
+    }
+
+    #startBtn {
+      margin: 20px;
+      padding: 12px 30px;
+      font-size: 1.2em;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #2a2a2a;
+      color: #fff;
+    }
+
+    .game-container {
+      display: none;
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+    }
+
+    .column {
+      background: rgba(0,0,0,0.6);
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .card {
+      padding: 10px;
+      margin: 5px;
+      background: #666;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      font-weight: bold;
+      min-width: 120px;
+    }
+
+    .hidden {
+      background: #333;
+      color: transparent;
+    }
+
+    .revealed {
+      background: #444;
+      color: #fff;
+    }
+
+    .matched {
+      background: #00cc44 !important;
+      color: #fff !important;
+      cursor: default;
+    }
+
+    #score {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    #timer {
+      margin-top: 20px;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 15px;
+      width: 100%;
+      text-align: center;
+      font-family: 'Great Vibes', cursive;
+      font-size: 1.5em;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>LAW VOCABULARY</h1>
+  <button id="startBtn">START</button>
+  <div id="score">Score: 0</div>
+
+  <div class="game-container" id="game">
+    <div class="column" id="col-es"></div>
+    <div class="column" id="col-en"></div>
+  </div>
+
+  <div id="timer">3:30</div>
+
+  <!-- Música de fondo -->
+  <audio id="bg-music" loop>
+    <source src="musica.mp3" type="audio/mpeg">
+  </audio>
+
+  <footer>BY LUCIA PÁEZ</footer>
+
+  <script>
+    const words = [
+      {es: "Ley", en: "Law"},
+      {es: "Tribunal", en: "Court"},
+      {es: "Juez", en: "Judge"},
+      {es: "Jurado", en: "Jury"},
+      {es: "Juicio", en: "Trial"},
+      {es: "Caso", en: "Case"},
+      {es: "Delito", en: "Crime"},
+      {es: "Derecho", en: "Right"},
+      {es: "Deber", en: "Duty"},
+      {es: "Abogado", en: "Lawyer"},
+      {es: "Norma", en: "Rule"},
+      {es: "Prueba", en: "Proof"},
+      {es: "Sentenciar", en: "Judge"},
+      {es: "Multa", en: "Fine"},
+      {es: "Prisión", en: "Prison"}
+    ];
+
+    let selectedEs = null;
+    let selectedEn = null;
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 210; // 3:30 = 210 segundos
+
+    const colEs = document.getElementById("col-es");
+    const colEn = document.getElementById("col-en");
+    const scoreBox = document.getElementById("score");
+    const timer = document.getElementById("timer");
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function renderGame() {
+      colEs.innerHTML = "";
+      colEn.innerHTML = "";
+      let shuffledEs = shuffle([...words]);
+      let shuffledEn = shuffle([...words]);
+      shuffledEs.forEach(w => {
+        let div = document.createElement("div");
+        div.className = "card hidden";
+        div.dataset.word = w.es;
+        div.dataset.lang = "es";
+        div.textContent = w.es;
+        div.onclick = () => revealCard(div);
+        colEs.appendChild(div);
+      });
+      shuffledEn.forEach(w => {
+        let div = document.createElement("div");
+        div.className = "card hidden";
+        div.dataset.word = w.en;
+        div.dataset.lang = "en";
+        div.textContent = w.en;
+        div.onclick = () => revealCard(div);
+        colEn.appendChild(div);
+      });
+    }
+
+    function revealCard(card) {
+      if (card.classList.contains("matched") || card.classList.contains("revealed")) return;
+
+      card.classList.remove("hidden");
+      card.classList.add("revealed");
+
+      if (card.dataset.lang === "es") {
+        if (selectedEs) hideCard(selectedEs);
+        selectedEs = card;
+      } else {
+        if (selectedEn) hideCard(selectedEn);
+        selectedEn = card;
+      }
+
+      if (selectedEs && selectedEn) {
+        let match = words.find(w => w.es === selectedEs.dataset.word && w.en === selectedEn.dataset.word);
+        if (match) {
+          score += 150;
+          scoreBox.textContent = "Score: " + score;
+          selectedEs.classList.add("matched");
+          selectedEn.classList.add("matched");
+          selectedEs = null;
+          selectedEn = null;
+
+          if (score >= 1500) {
+            alert("¡Felicidades! Puntaje máximo alcanzado.");
+            score = 0;
+            scoreBox.textContent = "Score: 0";
+            renderGame();
+          }
+        } else {
+          setTimeout(() => {
+            hideCard(selectedEs);
+            hideCard(selectedEn);
+            selectedEs = null;
+            selectedEn = null;
+          }, 1000);
+        }
+      }
+    }
+
+    function hideCard(card) {
+      if (card && !card.classList.contains("matched")) {
+        card.classList.remove("revealed");
+        card.classList.add("hidden");
+      }
+    }
+
+    function startGame() {
+      document.getElementById("game").style.display = "flex";
+      renderGame();
+      document.getElementById("bg-music").play();
+      timeLeft = 210;
+      updateTimer();
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimer();
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          alert("⏰ Se acabó el tiempo!");
+          score = 0;
+          scoreBox.textContent = "Score: 0";
+          renderGame();
+        }
+      }, 1000);
+    }
+
+    function updateTimer() {
+      let min = Math.floor(timeLeft / 60);
+      let sec = timeLeft % 60;
+      timer.textContent = `${min}:${sec < 10 ? "0" + sec : sec}`;
+    }
+
+    document.getElementById("startBtn").onclick = startGame;
+  </script>
+</body>
+</html>
